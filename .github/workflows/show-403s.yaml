@@ -1,0 +1,53 @@
+name: Audience claims as URIs vs. domains
+
+on:
+  workflow_dispatch:
+
+jobs:
+  with_proto:
+    name: Audience = https://foobar.com
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Request token with audience https://foobar.com
+        run: |
+          echo "Requesting OIDC token with audience=https://foobar.com"
+          RESPONSE=$(curl -sSL -D - \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=$(python3 -c 'import urllib.parse; print(urllib.parse.quote("https://foobar.com"))')")
+
+          echo "==== Raw Response ===="
+          echo "$RESPONSE"
+
+          BODY=$(echo "$RESPONSE" | sed -n '/^\r$/,$p' | tail -n +2)
+          STATUS=$(echo "$RESPONSE" | head -n 1 | awk '{print $2}')
+
+          echo "Status: $STATUS"
+          echo "Body:"
+          echo "$BODY"
+
+  sans_proto:
+    name: Audience = foobar.com
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Request token with audience foobar.com
+        run: |
+          echo "Requesting OIDC token with audience=foobar.com"
+          RESPONSE=$(curl -sSL -D - \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=$(python3 -c 'import urllib.parse; print(urllib.parse.quote("foobar.com"))')")
+
+          echo "==== Raw Response ===="
+          echo "$RESPONSE"
+
+          BODY=$(echo "$RESPONSE" | sed -n '/^\r$/,$p' | tail -n +2)
+          STATUS=$(echo "$RESPONSE" | head -n 1 | awk '{print $2}')
+
+          echo "Status: $STATUS"
+          echo "Body:"
+          echo "$BODY"
